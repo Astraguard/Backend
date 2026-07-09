@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Astraguard Backend API
+  version: 0.1.0
+  description: >
+    Public + internal API for verification, scoring, the scam address registry, certification,
+    and claims. This is the contract with astraguard-frontend's generated api-client — see
+    ARCHITECTURE.md §5.
+servers:
+  - url: https://api.astraguard.io
+  - url: http://localhost:4000
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Liveness/readiness check
+      security: []
+      responses:
+        '200':
+          description: Service status
+
+  /v1/scores/{assetOrContract}:
+    get:
+      summary: Current trust score and verdict for an address or contract
+      security: []
+      parameters:
+        - name: assetOrContract
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Score result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScoreResult' }
+
+  /v1/scores/{assetOrContract}/history:
+    get:
+      summary: Score time series
+      security: []
+      parameters:
+        - name: assetOrContract
+          in: path
+          required: true
+          schema: { type: string }
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Score history points
+
+  /v1/scan:
+    post:
+      summary: Pre-transaction verdict — the extension's core call, anonymous-capable
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScanRequest' }
+      responses:
+        '200':
+          description: Verdict
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScanResponse' }
+
+  /v1/registry:
+    get:
+      summary: List registry reports for an address
+      security: []
+      parameters:
+        - name: address
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Reports }
+    post:
+      summary: File a community scam report
+      responses:
+        '201': { description: Report created }
+
+  /v1/registry/{id}/endorse:
+    post:
+      summary: Analyst endorsement (step 1 of the two-person rule)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Report endorsed }
+
+  /v1/registry/{id}/confirm:
+    post:
+      summary: Independent analyst confirmation (step 2 of the two-person rule)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Report confirmed and propagated }
+
+  /v1/registry/{id}/reject:
+    post:
+      summary: Reject a pending or endorsed report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Report rejected }
+
+  /v1/certifications:
+    post:
+      summary: Submit a project for launch certification
+      responses:
+        '201': { description: Certification created; checklist run synchronously }
+
+  /v1/certifications/{id}:
+    get:
+      summary: Get certification status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Certification }
+
+  /v1/certifications/{id}/decide:
+    post:
+      summary: Analyst approve/reject decision
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Certification decided }
+
+  /v1/certifications/{id}/kyc:
+    post:
+      summary: Submit team KYC evidence for a certification's project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201': { description: KYC submission recorded as pending }
+
+  /v1/certifications/{id}/kyc/decide:
+    post:
+      summary: Analyst verified/rejected decision on a KYC submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: KYC submission decided }
+
+  /v1/claims:
+    post:
+      summary: File an insurance claim
+      responses:
+        '201': { description: Claim filed; tracing job enqueued }
+
+  /v1/claims/{id}:
+    get:
+      summary: Get claim status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Claim }
+
+  /v1/claims/{id}/review:
+    post:
+      summary: Move a filed claim into review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Claim in review }
+
+  /v1/claims/{id}/decide:
+    post:
+      summary: Approve or reject a claim in review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Claim decided }
+
+  /v1/webhooks:
+    get:
+      summary: List the caller's registered partner webhooks
+      responses:
+        '200': { description: Webhooks }
+    post:
+      summary: Register a partner webhook
+      responses:
+        '201': { description: Webhook registered }
+
+  /v1/webhooks/{id}:
+    delete:
+      summary: Remove a partner webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Webhook removed }
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    ScoreResult:
+      type: object
+      properties:
+        subjectAddress: { type: string }
+        score: { type: number }
+        verdict: { type: string, enum: [safe, caution, danger] }
+        signals: { type: object }
+    ScanRequest:
+      type: object
+      required: [destination]
+      properties:
+        destination: { type: string }
+        contractId: { type: string }
+        operationType: { type: string }
+    ScanResponse:
+      type: object
+      properties:
+        verdict: { type: string, enum: [safe, caution, danger] }
+        score: { type: number }
+        reasons:
+          type: array
+          items: { type: string }
