@@ -24,7 +24,7 @@ export function isCoverageEligible(score: number, hasConfirmedFlag: boolean): bo
   return !hasConfirmedFlag && score >= COVERAGE_ELIGIBILITY_THRESHOLD;
 }
 
-/** Score delta (vs. previous recorded score) that fires an alert per ARCHITECTURE.md §2.3. */
+/** Score delta (vs. previous recorded score) that fires an alert. */
 export const ALERT_SCORE_DROP_THRESHOLD = 20;
 
 /** Cache TTL for the /v1/scan hot path — favors freshness over the <50ms target from the doc. */

@@ -6,8 +6,8 @@ export const sorobanServer = new SorobanRpc.Server(config.stellar.sorobanRpcUrl)
 
 /**
  * Loads the oracle keypair used for privileged contract calls (set_coverage, anchor_flag, ...).
- * In production this must be replaced with a KMS/HSM-backed signer per ARCHITECTURE.md §2.4 —
- * this env-based loader is dev/testnet only.
+ * In production this must be replaced with a KMS/HSM-backed signer — this env-based loader is
+ * dev/testnet only.
  */
 export function loadOracleKeypair(): Keypair | null {
   if (!config.oracle.secretKey) return null;

@@ -1,9 +1,10 @@
 /**
  * Signal definitions and weights for the trust score engine.
  *
- * These weights are a v1 placeholder, not a finalized methodology — ARCHITECTURE.md calls the
- * scoring engine "the secret sauce" and explicitly leaves weighting undefined. Treat any change
- * here as a scoring-methodology change (should be reviewed, not just merged).
+ * These weights are a v1 placeholder, not a finalized methodology — the scoring engine is the
+ * most sensitive part of the system and its weighting is intentionally left open for
+ * calibration against real outcome data. Treat any change here as a scoring-methodology change
+ * (should be reviewed, not just merged).
  */
 export type SignalKey =
   | 'contractVerified'

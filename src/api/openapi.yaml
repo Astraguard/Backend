@@ -4,8 +4,7 @@ info:
   version: 0.1.0
   description: >
     Public + internal API for verification, scoring, the scam address registry, certification,
-    and claims. This is the contract with astraguard-frontend's generated api-client — see
-    ARCHITECTURE.md §5.
+    and claims. This is the contract with astraguard-frontend's generated api-client.
 servers:
   - url: https://api.astraguard.io
   - url: http://localhost:4000

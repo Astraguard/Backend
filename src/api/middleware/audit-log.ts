@@ -5,7 +5,7 @@ import { childLogger } from '../../shared/logger.js';
 const log = childLogger('api:audit-log');
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** Logs every mutating request per ARCHITECTURE.md §6 ("full audit log on every API mutation"). */
+/** Logs every mutating request — a full audit log on every API mutation. */
 export function registerAuditLog(app: FastifyInstance): void {
   app.addHook('onResponse', async (req, reply) => {
     if (!MUTATING_METHODS.has(req.method)) return;

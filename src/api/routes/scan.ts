@@ -11,8 +11,8 @@ const scanBodySchema = z.object({
 });
 
 /**
- * Pre-transaction scan — the extension's "money moment" hook. Latency budget ≤150ms per
- * ARCHITECTURE.md §2.3: try Redis first, only fall back to a live score computation on a miss.
+ * Pre-transaction scan — the extension's "money moment" hook. Latency budget ≤150ms: try
+ * Redis first, only fall back to a live score computation on a miss.
  */
 export function registerScanRoutes(app: FastifyInstance): void {
   app.post('/v1/scan', async (req) => {

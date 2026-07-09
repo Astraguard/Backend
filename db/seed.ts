@@ -3,9 +3,8 @@ import { ensureUser, issueApiKey } from '../src/shared/api-keys.js';
 
 /**
  * Bootstraps a local/dev environment with one admin user + API key. There's no self-serve
- * signup in this product (registry analysts and partners are provisioned internally per
- * ARCHITECTURE.md), so this script — not a public endpoint — is the intended way to get a
- * first usable key.
+ * signup in this product (registry analysts and partners are provisioned internally), so this
+ * script — not a public endpoint — is the intended way to get a first usable key.
  */
 async function main(): Promise<void> {
   const email = process.argv[2] ?? 'admin@astraguard.dev';

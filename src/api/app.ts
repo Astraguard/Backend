@@ -17,8 +17,8 @@ import { registerWebhookRoutes } from './routes/webhooks.js';
 
 /**
  * Per-key rate limit tiers (api_keys.rate_limit_tier). Keys with no match, and anonymous
- * callers, fall back to 'standard'. See ARCHITECTURE.md §6: "Public API rate-limited per key;
- * scanner endpoint anonymous-capable but abuse-throttled."
+ * callers, fall back to 'standard'. The public API is rate-limited per key; the scanner
+ * endpoint stays anonymous-capable but abuse-throttled.
  */
 const STANDARD_TIER = { max: 100, timeWindow: '1 minute' };
 const RATE_LIMIT_TIERS: Record<string, { max: number; timeWindow: string }> = {

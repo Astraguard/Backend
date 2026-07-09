@@ -39,7 +39,7 @@ function toKycRecord(row: Record<string, unknown>): KycRecord {
 }
 
 /**
- * Team identity verification. Two paths per ARCHITECTURE.md §6:
+ * Team identity verification. Two paths:
  *  1. Manual review by an analyst (default until a provider is wired up)
  *  2. A vetted third-party KYC provider (KYC_PROVIDER_API_KEY) so raw documents never touch our infra
  *

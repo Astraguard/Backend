@@ -7,8 +7,8 @@ import { getReport, type RegistryReport } from './reports.js';
 const log = childLogger('registry:review');
 
 /**
- * Two-person rule (ARCHITECTURE.md §2.3): one analyst endorses, a *different* analyst confirms.
- * No single analyst can take a report from pending straight to confirmed.
+ * Two-person rule: one analyst endorses, a *different* analyst confirms. No single analyst can
+ * take a report from pending straight to confirmed.
  */
 export async function endorseReport(reportId: string, analystId: string): Promise<RegistryReport> {
   const report = await getReport(reportId);

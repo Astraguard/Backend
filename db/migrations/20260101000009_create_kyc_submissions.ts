@@ -5,9 +5,9 @@ export async function up(knex: Knex): Promise<void> {
     t.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     t.uuid('project_id').notNullable().references('id').inTable('projects').onDelete('CASCADE');
     t.string('team_member_name').notNullable();
-    // Pointer into encrypted storage — never the raw document. See ARCHITECTURE.md §6: KYC data
-    // needs the strictest access isolation, which is why this table (and not a generic
-    // evidence/jsonb blob) exists as its own schema surface.
+    // Pointer into encrypted storage — never the raw document. KYC data needs the strictest
+    // access isolation, which is why this table (and not a generic evidence/jsonb blob) exists
+    // as its own schema surface.
     t.string('document_ref').notNullable();
     t.string('status').notNullable().defaultTo('pending'); // pending | verified | rejected
     t.string('decided_by').nullable();

@@ -57,9 +57,9 @@ jobs:
       - run: npm run test:integration
       - run: npm run build
 
-  # The OpenAPI-diff gate described in ARCHITECTURE.md §6 ("a breaking API change fails the
-  # frontend build") lives in astraguard-frontend's CI, where api-client is generated from
-  # src/api/openapi.yaml. This job only checks the spec itself is well-formed YAML.
+  # The OpenAPI-diff gate (a breaking API change should fail the frontend build) lives in
+  # astraguard-frontend's CI, where api-client is generated from src/api/openapi.yaml. This job
+  # only checks the spec itself is well-formed YAML.
   validate-openapi:
     runs-on: ubuntu-latest
     steps:

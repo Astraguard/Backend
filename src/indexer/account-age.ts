@@ -11,8 +11,8 @@ const MATURE_ACCOUNT_DAYS = 180;
 /**
  * Live Horizon lookup — an account's earliest operation approximates its creation date (Horizon
  * has no direct "created at" field). Only call this from background jobs (indexer/backfill.ts,
- * scoring/engine.ts's recomputeAndPersist), never the live request path — see the ≤150ms /v1/scan
- * budget in ARCHITECTURE.md §2.3.
+ * scoring/engine.ts's recomputeAndPersist), never the live request path — /v1/scan has a
+ * ≤150ms latency budget.
  */
 export async function fetchAccountCreatedAt(address: string): Promise<Date | null> {
   try {

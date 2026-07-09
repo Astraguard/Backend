@@ -9,7 +9,7 @@ import { getReport } from './reports.js';
 const log = childLogger('registry:propagation');
 
 /**
- * Confirmed-flag fanout per ARCHITECTURE.md §2.3:
+ * Confirmed-flag fanout:
  *  1. Instant effect: overwrite the scan cache so the extension sees "danger" immediately.
  *  2. Durable + auditable: anchor a hash of the flag record on-chain via the oracle.
  * Only the hash is anchored — evidence stays off-chain (may contain victim data).

@@ -15,9 +15,9 @@ const log = childLogger('safetynet:oracle');
 /**
  * Signs and submits the oracle's privileged transactions to astraguard-contracts.
  *
- * ARCHITECTURE.md §2.4 requires the oracle key live in a KMS/HSM in production — loadOracleKeypair()
- * currently reads from env, which is dev/testnet-only. Swap that loader for a KMS-backed signer
- * before this ever points at mainnet.
+ * The oracle key must live in a KMS/HSM in production — loadOracleKeypair() currently reads
+ * from env, which is dev/testnet-only. Swap that loader for a KMS-backed signer before this
+ * ever points at mainnet.
  */
 async function submitContractCall(
   contractId: string,
