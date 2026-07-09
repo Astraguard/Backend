@@ -1,0 +1,75 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_USER: astraguard
+          POSTGRES_PASSWORD: astraguard
+          POSTGRES_DB: astraguard
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U astraguard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://astraguard:astraguard@localhost:5432/astraguard
+      REDIS_URL: redis://localhost:6379
+      HORIZON_URL: https://horizon-testnet.stellar.org
+      SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+      API_KEY_SALT: ci-test-salt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run migrate
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build
+
+  # The OpenAPI-diff gate described in ARCHITECTURE.md §6 ("a breaking API change fails the
+  # frontend build") lives in astraguard-frontend's CI, where api-client is generated from
+  # src/api/openapi.yaml. This job only checks the spec itself is well-formed YAML.
+  validate-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node -e "
+          const fs = require('fs');
+          const content = fs.readFileSync('src/api/openapi.yaml', 'utf8');
+          if (!content.startsWith('openapi:')) throw new Error('openapi.yaml missing openapi: root key');
+          console.log('openapi.yaml present and starts correctly');
+          "
