@@ -61,11 +61,43 @@ export async function getReport(id: string): Promise<RegistryReport> {
   return toReport(row);
 }
 
-export async function listReportsForAddress(targetAddress: string): Promise<RegistryReport[]> {
-  const rows = await db('registry_reports')
-    .where({ target_address: targetAddress })
-    .orderBy('created_at', 'desc');
-  return rows.map(toReport);
+export interface ListReportsOptions {
+  limit?: number;
+  offset?: number;
+}
+
+export interface PaginatedReports {
+  reports: RegistryReport[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export async function listReportsForAddress(
+  targetAddress: string,
+  options: ListReportsOptions = {},
+): Promise<PaginatedReports> {
+  const limit = Math.min(options.limit ?? 50, 100);
+  const offset = options.offset ?? 0;
+
+  const [rows, countResult] = await Promise.all([
+    db('registry_reports')
+      .where({ target_address: targetAddress })
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+      .offset(offset),
+    db('registry_reports')
+      .where({ target_address: targetAddress })
+      .count<{ count: string }>('id as count')
+      .first(),
+  ]);
+
+  return {
+    reports: rows.map(toReport),
+    total: parseInt(countResult?.count ?? '0', 10),
+    limit,
+    offset,
+  };
 }
 
 export async function hasConfirmedReport(targetAddress: string): Promise<boolean> {

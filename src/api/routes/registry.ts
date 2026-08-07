@@ -10,15 +10,19 @@ const fileReportSchema = z.object({
   evidence: z.record(z.string(), z.unknown()).default({}),
 });
 
-const listQuerySchema = z.object({ address: z.string().min(1) });
+const listQuerySchema = z.object({
+  address: z.string().min(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
 const idParamsSchema = z.object({ id: z.string().uuid() });
 
 export function registerRegistryRoutes(app: FastifyInstance): void {
   app.get('/v1/registry', async (req) => {
-    const { address } = listQuerySchema.parse(req.query);
+    const { address, limit, offset } = listQuerySchema.parse(req.query);
     // Evidence is intentionally omitted from the public list response — see reports.ts.
-    const reports = await listReportsForAddress(address);
-    return { reports };
+    const result = await listReportsForAddress(address, { limit, offset });
+    return result;
   });
 
   app.post('/v1/registry', { preHandler: requireApiKey() }, async (req, reply) => {
