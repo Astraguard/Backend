@@ -57,9 +57,17 @@ jobs:
       - run: npm run test:integration
       - run: npm run build
 
-  # The OpenAPI-diff gate (a breaking API change should fail the frontend build) lives in
-  # astraguard-frontend's CI, where api-client is generated from src/api/openapi.yaml. This job
-  # only checks the spec itself is well-formed YAML.
+  # Two-stage OpenAPI gate:
+  #
+  # 1. validate-openapi  — runs @redocly/cli lint against src/api/openapi.yaml.
+  #    Catches malformed YAML, invalid $refs, duplicate operationIds, undefined path
+  #    parameters, and other schema violations that the old grep-for-"openapi:" check
+  #    would silently pass.
+  #
+  # 2. check-routes-drift — compares every Fastify route registered under
+  #    src/api/routes/*.ts and src/api/app.ts against the paths declared in openapi.yaml.
+  #    Exits non-zero if any route is missing from the spec, so drift is caught here
+  #    rather than only when the frontend regenerates its api-client.
   validate-openapi:
     runs-on: ubuntu-latest
     steps:
@@ -67,9 +75,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: node -e "
-          const fs = require('fs');
-          const content = fs.readFileSync('src/api/openapi.yaml', 'utf8');
-          if (!content.startsWith('openapi:')) throw new Error('openapi.yaml missing openapi: root key');
-          console.log('openapi.yaml present and starts correctly');
-          "
+          cache: npm
+      - run: npm ci
+      - name: Lint OpenAPI spec with Redocly
+        run: npm run check:openapi
+      - name: Check route-vs-spec drift
+        run: npm run check:routes
