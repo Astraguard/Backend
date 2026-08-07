@@ -25,7 +25,9 @@
     "migrate": "tsx db/migrate.ts up",
     "migrate:rollback": "tsx db/migrate.ts down",
     "migrate:make": "tsx db/migrate.ts make",
-    "seed": "tsx db/seed.ts"
+    "seed": "tsx db/seed.ts",
+    "check:openapi": "redocly lint src/api/openapi.yaml",
+    "check:routes": "node scripts/check-routes-drift.mjs"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
@@ -43,6 +45,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@redocly/cli": "2.46.0",
     "@types/node": "^20.14.15",
     "@types/pg": "^8.11.6",
     "@typescript-eslint/eslint-plugin": "^7.18.0",

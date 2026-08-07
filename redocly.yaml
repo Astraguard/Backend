@@ -1,0 +1,20 @@
+# Redocly CLI configuration
+# https://redocly.com/docs/cli/configuration/
+apis:
+  main:
+    root: src/api/openapi.yaml
+
+rules:
+  # Core correctness — these would be silent bugs with the old grep check
+  no-unresolved-refs: error
+  no-undefined-server-variable: error
+  operation-operationId-unique: error
+  operation-parameters-unique: error
+  path-params-defined: error
+
+  # Quality gates (warn only — operationId not required by spec)
+  info-license: off          # license TBD per README
+  info-contact: off
+  operation-summary: warn
+  operation-operationId: warn
+  tag-description: off
