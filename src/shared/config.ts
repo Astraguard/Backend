@@ -30,9 +30,35 @@ const envSchema = z.object({
   // Comma-separated allowed origins for the dashboard/extension in production. In non-production
   // the dev server reflects any origin (see api/app.ts) so this is unused outside prod.
   CORS_ORIGINS: z.string().optional().default(''),
+
+  // Controls Fastify's trustProxy option so req.ip resolves to the real client IP behind a
+  // reverse proxy rather than the proxy socket address.
+  //
+  // Accepted values:
+  //   (unset / empty)  → false  — no proxy trust; req.ip is the raw socket address
+  //   "1"              → 1      — trust one upstream hop (most common: single Nginx/ALB layer)
+  //   "2", "3", …      → N      — trust N upstream hops
+  //   "loopback"       → "loopback"  — Fastify built-in alias (127.0.0.1, ::1)
+  //   "10.0.0.0/8"     → CIDR string — trust a specific proxy subnet
+  //
+  // NEVER set to "true" / a wildcard in production — X-Forwarded-For becomes fully spoofable.
+  TRUST_PROXY: z.string().optional().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
+
+/**
+ * Parse the raw TRUST_PROXY string into the value Fastify expects:
+ *   ""          → false   (no proxy trust, default)
+ *   "1"–"9…"   → number  (trust N upstream hops)
+ *   any string  → string  (CIDR range or Fastify built-in alias like "loopback")
+ */
+function parseTrustProxy(raw: string): number | string | false {
+  if (!raw) return false;
+  const n = Number(raw);
+  if (!Number.isNaN(n) && Number.isInteger(n) && n > 0) return n;
+  return raw;
+}
 
 function loadEnv(): Env {
   const parsed = envSchema.safeParse(process.env);
@@ -81,5 +107,8 @@ export const config = {
   },
   cors: {
     origins: env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean),
+  },
+  proxy: {
+    trustProxy: parseTrustProxy(env.TRUST_PROXY),
   },
 } as const;
