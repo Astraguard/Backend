@@ -2,9 +2,8 @@ import { db, closeDb } from '../src/shared/db.js';
 import { ensureUser, issueApiKey } from '../src/shared/api-keys.js';
 
 /**
- * Bootstraps a local/dev environment with one admin user + API key. There's no self-serve
- * signup in this product (registry analysts and partners are provisioned internally), so this
- * script — not a public endpoint — is the intended way to get a first usable key.
+ * Bootstraps a local/dev environment with one admin user + API key. This creates the initial
+ * key that can then be used to provision additional keys via POST /v1/admin/api-keys.
  */
 async function main(): Promise<void> {
   const email = process.argv[2] ?? 'admin@astraguard.dev';
@@ -12,7 +11,7 @@ async function main(): Promise<void> {
   const ownerId = await ensureUser(email, 'admin');
   const { rawKey, keyId } = await issueApiKey(ownerId, {
     label: 'seed-admin',
-    scopes: ['registry:review', 'certification:decide', 'claims:review'],
+    scopes: ['admin:api-keys', 'registry:review', 'certification:decide', 'claims:review'],
     rateLimitTier: 'internal',
   });
 
