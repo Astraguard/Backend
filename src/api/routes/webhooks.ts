@@ -4,9 +4,30 @@ import { z } from 'zod';
 import { db } from '../../shared/db.js';
 import { NotFoundError } from '../../shared/errors.js';
 import { requireApiKey } from '../middleware/auth.js';
+import { assertSafeWebhookUrl } from '../../shared/ssrf-guard.js';
 
 const registerSchema = z.object({
-  url: z.string().url(),
+  url: z
+    .string()
+    .url()
+    .refine(
+      (u) => {
+        try {
+          assertSafeWebhookUrl(u);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      (u) => {
+        try {
+          assertSafeWebhookUrl(u);
+          return { message: 'Invalid webhook URL.' };
+        } catch (err) {
+          return { message: (err as Error).message };
+        }
+      },
+    ),
   events: z.array(z.enum(['score_change', 'registry_flag', 'claim_decision'])).min(1),
 });
 

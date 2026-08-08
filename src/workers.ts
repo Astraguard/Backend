@@ -11,6 +11,7 @@ import { notifyExchanges } from './safetynet/exchange-alerts.js';
 import { getClaim } from './safetynet/claims.js';
 import { db } from './shared/db.js';
 import { signWebhookPayload } from './shared/webhook-signing.js';
+import { assertSafeResolvedHost } from './shared/ssrf-guard.js';
 
 /**
  * Background job workers for the queues declared in shared/queue.ts. Run as a separate process
@@ -50,16 +51,29 @@ const alertWorker = createWorker<Record<string, unknown>>(QUEUE_NAMES.alertDispa
   const payload = JSON.stringify({ event: eventName, jobName: job.name, ...job.data });
 
   await Promise.all(
-    webhooks.map((hook) =>
-      fetch(hook.url, {
+    webhooks.map(async (hook) => {
+      try {
+        // Re-validate at dispatch time to defend against DNS-rebinding attacks:
+        // a hostname that resolved to a public IP at registration may now resolve
+        // to an internal address if an attacker controls the DNS TTL.
+        await assertSafeResolvedHost(hook.url);
+      } catch (err) {
+        logger.warn(
+          { err, webhookId: hook.id, url: hook.url },
+          'partner webhook dispatch blocked by SSRF guard — skipping',
+        );
+        return;
+      }
+
+      await fetch(hook.url, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
           'x-astraguard-signature': signWebhookPayload(hook.secret, payload),
         },
         body: payload,
-      }).catch((err) => logger.error({ err, webhookId: hook.id }, 'partner webhook dispatch failed')),
-    ),
+      }).catch((err) => logger.error({ err, webhookId: hook.id }, 'partner webhook dispatch failed'));
+    }),
   );
 
   if (job.name === 'registry-flag') {
