@@ -65,4 +65,18 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
     if (!deleted) throw new NotFoundError('Webhook');
     return { deleted: true };
   });
+
+  app.post('/v1/webhooks/:id/rotate-secret', { preHandler: requireApiKey() }, async (req, reply) => {
+    const { id } = idParamsSchema.parse(req.params);
+    const newSecret = randomBytes(32).toString('hex');
+
+    const [row] = await db('partner_webhooks')
+      .where({ id, owner_id: req.apiKey!.ownerId })
+      .update({ secret: newSecret }, PUBLIC_COLUMNS);
+
+    if (!row) throw new NotFoundError('Webhook');
+
+    reply.status(200);
+    return { webhook: row, secret: newSecret };
+  });
 }
