@@ -228,6 +228,46 @@ paths:
       responses:
         '200': { description: Webhook removed }
 
+  /v1/webhooks/{id}/rotate-secret:
+    post:
+      summary: Rotate the HMAC signing secret for a partner webhook
+      description: >
+        Generates a new 64-character hex HMAC secret for the webhook, replaces the stored
+        secret in-place, and returns it exactly once. The webhook's id, url, events, and
+        history are preserved. The caller must update their signature verification logic
+        immediately — the old secret is no longer valid after this call.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Secret rotated; new secret returned once
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      owner_id: { type: string, format: uuid }
+                      url: { type: string, format: uri }
+                      events:
+                        type: array
+                        items: { type: string }
+                      active: { type: boolean }
+                      created_at: { type: string, format: date-time }
+                  secret:
+                    type: string
+                    description: >
+                      The new raw HMAC secret — returned exactly once. Store it immediately;
+                      it cannot be retrieved again.
+        '401': { description: Missing or invalid API key }
+        '404': { description: Webhook not found or does not belong to the caller }
+
   /v1/admin/api-keys:
     get:
       summary: List all API keys (admin view)
