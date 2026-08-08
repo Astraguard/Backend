@@ -228,6 +228,93 @@ paths:
       responses:
         '200': { description: Webhook removed }
 
+  /v1/admin/api-keys:
+    get:
+      summary: List all API keys (admin view)
+      description: >
+        Returns all active API keys across all owners. Requires the `admin:api-keys` scope.
+        The raw key is never returned here — it is only available at issuance time.
+      parameters:
+        - name: includeRevoked
+          in: query
+          schema: { type: string, enum: ['true', 'false'], default: 'false' }
+          description: Include revoked keys in the response
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: ownerId
+          in: query
+          schema: { type: string, format: uuid }
+          description: Filter to a specific user's keys
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKeys:
+                    type: array
+                    items: { $ref: '#/components/schemas/ApiKeyRecord' }
+                  pagination:
+                    type: object
+                    properties:
+                      limit: { type: integer }
+                      offset: { type: integer }
+        '401': { description: Missing or invalid API key / insufficient scope }
+    post:
+      summary: Issue a new API key
+      description: >
+        Creates (or looks up) a user by email and issues a new API key with the specified
+        scopes and rate-limit tier. Requires the `admin:api-keys` scope. The `rawKey` in the
+        response is shown exactly once and is never stored — save it immediately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IssueApiKeyRequest' }
+      responses:
+        '201':
+          description: API key issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKey: { $ref: '#/components/schemas/IssuedApiKeyResponse' }
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid API key / insufficient scope }
+
+  /v1/admin/api-keys/{id}:
+    delete:
+      summary: Revoke an API key
+      description: >
+        Soft-deletes the key by setting `revoked_at`. The key is immediately rejected by the
+        auth middleware on subsequent requests. Returns 409 if the key is already revoked.
+        Requires the `admin:api-keys` scope.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revoked: { type: boolean }
+                  id: { type: string, format: uuid }
+        '401': { description: Missing or invalid API key / insufficient scope }
+        '404': { description: API key not found }
+        '409': { description: API key is already revoked }
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -257,3 +344,60 @@ components:
         reasons:
           type: array
           items: { type: string }
+    ApiKeyRecord:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ownerId: { type: string, format: uuid }
+        ownerEmail: { type: string, format: email }
+        label: { type: string }
+        scopes:
+          type: array
+          items: { type: string }
+        rateLimitTier: { type: string, enum: [standard, partner, internal] }
+        createdAt: { type: string, format: date-time }
+        revokedAt: { type: string, format: date-time, nullable: true }
+    IssueApiKeyRequest:
+      type: object
+      required: [ownerEmail, scopes]
+      properties:
+        ownerEmail:
+          type: string
+          format: email
+          description: Email of the user to issue the key for; created if it doesn't exist
+        label:
+          type: string
+          minLength: 1
+          maxLength: 100
+          default: admin-issued
+        scopes:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [admin:api-keys, registry:review, certification:decide, claims:review]
+        rateLimitTier:
+          type: string
+          enum: [standard, partner, internal]
+          default: standard
+        role:
+          type: string
+          enum: [analyst, admin, partner]
+          default: analyst
+          description: Role assigned when creating a new user; ignored for existing users
+    IssuedApiKeyResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ownerId: { type: string, format: uuid }
+        ownerEmail: { type: string, format: email }
+        label: { type: string }
+        scopes:
+          type: array
+          items: { type: string }
+        rateLimitTier: { type: string, enum: [standard, partner, internal] }
+        rawKey:
+          type: string
+          description: >
+            The raw API key — returned exactly once at issuance and never stored.
+            Store it immediately; it cannot be retrieved again.

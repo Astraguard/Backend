@@ -14,6 +14,7 @@ import { registerRegistryRoutes } from './routes/registry.js';
 import { registerCertificationRoutes } from './routes/certification.js';
 import { registerClaimRoutes } from './routes/claims.js';
 import { registerWebhookRoutes } from './routes/webhooks.js';
+import { registerAdminRoutes } from './routes/admin.js';
 
 /**
  * Per-key rate limit tiers (api_keys.rate_limit_tier). Keys with no match, and anonymous
@@ -78,6 +79,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   registerCertificationRoutes(app);
   registerClaimRoutes(app);
   registerWebhookRoutes(app);
+  registerAdminRoutes(app);
 
   return app;
 }

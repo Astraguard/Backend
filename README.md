@@ -125,6 +125,8 @@ npm run seed                  # creates an admin user + prints an API key (shown
 npm run dev                   # API server on :4000
 ```
 
+The seeded key has the `admin:api-keys` scope, which is required to provision additional keys via `POST /v1/admin/api-keys`. See the OpenAPI spec for full request/response shapes.
+
 In separate terminals, as needed:
 
 ```bash
@@ -149,7 +151,6 @@ CI (`.github/workflows/backend-ci.yml`) runs lint, typecheck, migrations, both t
 - **Behavioral/static checks are real but heuristic**, not a substitute for a manual audit — see the `details` field each check returns for exactly what was and wasn't inspected.
 - **No KYC provider integrated** — `KYC_PROVIDER_API_KEY` routes to manual analyst review only.
 - **Oracle key is loaded from env** (`ORACLE_SECRET_KEY`) for dev/testnet. Production requires swapping `shared/stellar.ts#loadOracleKeypair` for a KMS/HSM-backed signer.
-- **No admin/self-serve key issuance endpoint** — `npm run seed` is the only bootstrap path; registry analysts and partners are meant to be provisioned internally, not through public signup.
 
 ## License
 
