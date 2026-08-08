@@ -46,7 +46,7 @@ const loggerOptions = config.isProduction
     };
 
 export async function buildApp(): Promise<FastifyInstance> {
-  const app = Fastify({ logger: loggerOptions });
+  const app = Fastify({ logger: loggerOptions, trustProxy: config.proxy.trustProxy });
 
   await app.register(sensible);
   await app.register(cors, { origin: config.isProduction ? config.cors.origins : true });
