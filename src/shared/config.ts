@@ -46,6 +46,16 @@ function loadEnv(): Env {
 
 export const env = loadEnv();
 
+// Fail fast: a production deploy with no CORS_ORIGINS silently blocks every cross-origin
+// request (dashboard, extension, partners) because @fastify/cors treats origin:[] as
+// "deny all". Catch this at startup rather than at the first runtime CORS failure.
+if (env.NODE_ENV === 'production' && !env.CORS_ORIGINS.trim()) {
+  throw new Error(
+    'CORS_ORIGINS must be set in production (comma-separated list of allowed origins). ' +
+      'Example: CORS_ORIGINS=https://app.astraguard.io,https://extension.astraguard.io',
+  );
+}
+
 export const config = {
   env: env.NODE_ENV,
   isProduction: env.NODE_ENV === 'production',
