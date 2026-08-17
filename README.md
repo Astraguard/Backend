@@ -149,7 +149,7 @@ CI (`.github/workflows/backend-ci.yml`) runs lint, typecheck, migrations, both t
 - **Contract IDs aren't configured by default.** `REGISTRY_ANCHOR_CONTRACT_ID` / `INSURANCE_POOL_CONTRACT_ID` are unset out of the box, so oracle calls (`safetynet/oracle.ts`) log a warning and return a no-op tx hash instead of failing.
 - **Scoring weights and thresholds are provisional** (`scoring/signals.ts`, `scoring/thresholds.ts`) — not calibrated against labeled outcomes.
 - **Behavioral/static checks are real but heuristic**, not a substitute for a manual audit — see the `details` field each check returns for exactly what was and wasn't inspected.
-- **No KYC provider integrated** — `KYC_PROVIDER_API_KEY` routes to manual analyst review only.
+- **No KYC provider integrated** — `KYC_PROVIDER_API_KEY` routes to manual analyst review only. See `verification/kyc/persona.ts` for the Persona integration — set `KYC_PROVIDER_API_KEY`, `KYC_PROVIDER_TEMPLATE_ID`, and `KYC_PROVIDER_WEBHOOK_SECRET` to enable auto-verdicts.
 - **Oracle key is loaded from env** (`ORACLE_SECRET_KEY`) for dev/testnet. Production requires swapping `shared/stellar.ts#loadOracleKeypair` for a KMS/HSM-backed signer.
 
 ## License

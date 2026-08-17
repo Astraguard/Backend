@@ -19,6 +19,9 @@ const envSchema = z.object({
   API_KEY_SALT: z.string().min(1),
 
   KYC_PROVIDER_API_KEY: z.string().optional().default(''),
+  KYC_PROVIDER_BASE_URL: z.string().url().optional().or(z.literal('')).default(''),
+  KYC_PROVIDER_WEBHOOK_SECRET: z.string().optional().default(''),
+  KYC_PROVIDER_TEMPLATE_ID: z.string().optional().default(''),
 
   // astraguard-contracts deployment IDs (see that repo's deployments/ per network).
   // Left blank until contracts are deployed — oracle calls no-op with a warning until set.
@@ -107,6 +110,9 @@ export const config = {
   },
   kyc: {
     providerApiKey: env.KYC_PROVIDER_API_KEY,
+    providerBaseUrl: env.KYC_PROVIDER_BASE_URL,
+    providerWebhookSecret: env.KYC_PROVIDER_WEBHOOK_SECRET,
+    providerTemplateId: env.KYC_PROVIDER_TEMPLATE_ID,
   },
   contracts: {
     registryAnchorId: env.REGISTRY_ANCHOR_CONTRACT_ID,
